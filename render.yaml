@@ -2,7 +2,7 @@ services:
   - type: web
     name: mtg-database
     env: python
-    buildCommand: pip install -r requirements.txt && python init_db.py
+    buildCommand: pip install -r requirements.txt && python main.py --clean --sets urzas
     startCommand: gunicorn --bind 0.0.0.0:$PORT web_app:app
     envVars:
       - key: PYTHON_VERSION
