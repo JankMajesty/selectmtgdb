@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>MTG DB Query</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root { color-scheme: light dark; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 24px; }
+    h1 { margin: 0 0 12px; }
+    .container { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+    textarea { width: 100%; height: 160px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px; }
+    button { padding: 8px 12px; }
+    .result { margin-top: 16px; overflow: auto; max-height: 60vh; border: 1px solid #8884; border-radius: 6px; }
+    table { border-collapse: collapse; width: 100%; font-size: 14px;}
+    th, td { padding: 6px 8px; border-bottom: 1px solid #8883; text-align: left; vertical-align: top;}
+    th { position: sticky; top: 0; background: color-mix(in oklab, Canvas, CanvasText 5%); }
+    .error { color: #b00020; white-space: pre-wrap; }
+    details { margin-bottom: 10px; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .meta { font-size: 12px; color: #666; margin: 8px 0; }
+  </style>
+</head>
+<body>
+  <h1>MTG Database Query</h1>
+  <div class="container">
+    <section>
+      <form method="POST" action="/query">
+        <label for="sql"><strong>Enter a SELECT or WITH query:</strong></label>
+        <textarea id="sql" name="sql" placeholder="SELECT * FROM Card LIMIT 50">{{ query_text }}</textarea>
+        <div class="meta">Read-only; single statement; max 1000 rows shown.</div>
+        <button type="submit">Run Query</button>
+      </form>
+
+      {% if result %}
+        {% if result.error %}
+          <p class="error">Error: {{ result.error }}</p>
+        {% else %}
+          {% if result.truncated %}
+            <p class="meta">Showing first 1000 rows (truncated).</p>
+          {% endif %}
+          <div class="result">
+            <table>
+              <thead>
+                <tr>
+                  {% for c in result.columns %}
+                    <th>{{ c }}</th>
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in result.rows %}
+                  <tr>
+                    {% for cell in row %}
+                      <td>{{ cell }}</td>
+                    {% endfor %}
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% endif %}
+      {% endif %}
+    </section>
+
+    <aside>
+      <details open>
+        <summary><strong>Sample queries</strong></summary>
+        <ul>
+          {% for s in sample_queries %}
+            <li>
+              <button type="button" data-sql="{{ s.sql | e }}" onclick="fillSample(this.dataset.sql)">{{ s.name }}</button>
+            </li>
+          {% endfor %}
+        </ul>
+      </details>
+
+      <details>
+        <summary><strong>Schema</strong></summary>
+        {% for table, cols in schema.items() %}
+          <div style="margin-bottom:10px">
+            <div><strong>{{ table }}</strong></div>
+            <ul style="margin:4px 0 0 16px; padding:0">
+              {% for c in cols %}
+                <li><code>{{ c.name }}</code> <small>({{ c.type }}){% if c.pk %}, PK{% endif %}</small></li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endfor %}
+      </details>
+    </aside>
+  </div>
+
+  <script>
+    function fillSample(sql) {
+      document.getElementById('sql').value = sql;
+      document.getElementById('sql').focus();
+    }
+  </script>
+</body>
+</html>

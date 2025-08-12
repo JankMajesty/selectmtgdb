@@ -1,0 +1,10 @@
+[project]
+name = "cursormtgdb"
+version = "0.1.0"
+description = "Magic: The Gathering database with Scryfall API integration"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "flask>=3.1.1",
+    "requests>=2.31.0",
+]
