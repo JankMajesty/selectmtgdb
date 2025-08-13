@@ -10,7 +10,37 @@ DB_PATH = os.path.join(BASE_DIR, "mtg_database.db")
 
 MAX_ROWS = 1000
 
+def create_database():
+    """Create database with schema and populate with sample data"""
+    try:
+        print(f"Creating database at {DB_PATH}...")
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Read and execute the schema
+        schema_path = os.path.join(BASE_DIR, "mtgSchema.sql")
+        with open(schema_path, 'r') as f:
+            schema = f.read()
+            cursor.executescript(schema)
+        
+        conn.commit()
+        conn.close()
+        print(f"Database created successfully at {DB_PATH}")
+        
+        # Populate with sample data
+        from populate_sample_data import populate_sample_data
+        populate_sample_data(DB_PATH)
+        
+    except Exception as e:
+        print(f"Error creating database: {e}")
+        raise
+
 def get_ro_connection():
+    # Ensure database exists before trying to connect
+    if not os.path.exists(DB_PATH):
+        print(f"Database not found at {DB_PATH}, creating it...")
+        create_database()
+    
     # Connect read-only using SQLite URI
     uri = f"file:{DB_PATH}?mode=ro"
     return sqlite3.connect(uri, uri=True, check_same_thread=False)
